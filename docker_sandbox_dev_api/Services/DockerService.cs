@@ -78,5 +78,10 @@ namespace docker_sandbox_dev_api.Services
         {
             await client.Containers.StartContainerAsync(containerId, null);
         }
+
+        public async Task DeleteContainer(string containerId)
+        {
+            await client.Containers.KillContainerAsync(containerId, null);
+        }
     }
 }

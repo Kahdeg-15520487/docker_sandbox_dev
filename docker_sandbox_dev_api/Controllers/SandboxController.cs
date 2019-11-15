@@ -28,8 +28,8 @@ namespace docker_sandbox_dev_api.Controllers
         }
 
         [HttpGet]
-        //[Authorize]
-        //[UserMapper]
+        [Authorize]
+        [UserMapper]
         public async Task<IEnumerable<Docker.DotNet.Models.ContainerListResponse>> GetCreatedSandbox()
         {
             //Guid userId = (Guid)this.Request.HttpContext.Items["UserId"];
@@ -52,7 +52,44 @@ namespace docker_sandbox_dev_api.Controllers
         {
             //IEnumerable<string> containers = await this.dockerService.GetContainers();
             //return string.Join(", ", containers);
-            return await this.dockerService.CreateContainer("");
+            //Guid userId = (Guid)this.Request.HttpContext.Items["UserId"];
+            //User user = this.context.Users.Include(u => u.Containers).FirstOrDefault(u => u.UserId.Equals(userId));
+            //if (user.Containers.Count > 0)
+            //{
+            //    return user.Containers.First().DockerContainerId;
+            //}
+            //else
+            //{
+            //    string dockerContainerId = await this.dockerService.CreateContainer("");
+            //    user.Containers.Add(new Container()
+            //    {
+            //        ContainerId = Guid.NewGuid(),
+            //        DockerContainerId = dockerContainerId,
+            //        UserId = user.UserId
+            //    });
+            //    await context.SaveChangesAsync();
+            //    return dockerContainerId;
+            //}
+
+            return await this.dockerService.CreateContainer(""); 
+        }
+
+        [HttpDelete]
+        [Authorize]
+        [UserMapper]
+        public async Task<IActionResult> DeleteSandbox(string sandboxId)
+        {
+            Guid userId = (Guid)this.Request.HttpContext.Items["UserId"];
+            User user = this.context.Users.Include(u => u.Containers).FirstOrDefault(u => u.UserId.Equals(userId));
+            if (user.Containers.FirstOrDefault(c => c.DockerContainerId == sandboxId) == null)
+            {
+                return this.NotFound();
+            }
+            else
+            {
+                await this.dockerService.DeleteContainer(sandboxId);
+                return Ok();
+            }
         }
     }
 }

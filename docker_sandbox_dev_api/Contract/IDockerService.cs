@@ -8,5 +8,6 @@ namespace docker_sandbox_dev_api.Contract
         Task<IEnumerable<Docker.DotNet.Models.ContainerListResponse>> GetContainers();
         Task<string> CreateContainer(string image);
         Task StartContainer(string containerId);
+        Task DeleteContainer(string sandboxId);
     }
 }

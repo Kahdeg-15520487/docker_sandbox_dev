@@ -8,6 +8,9 @@ using Microsoft.Extensions.Logging;
 using docker_sandbox_dev.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using Newtonsoft.Json.Linq;
 
 namespace docker_sandbox_dev.Controllers
 {
@@ -59,6 +62,39 @@ namespace docker_sandbox_dev.Controllers
             ViewData["Message"] = "Secure page.";
 
             return View();
+        }
+
+        public async Task<IActionResult> CallAPI()
+        {
+
+            string accessToken = await this.HttpContext.GetTokenAsync("access_token");
+
+            HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            HttpResponseMessage response = await client.PostAsync("http://localhost:5003/api/sandbox", new StringContent(""));
+
+            if (response.IsSuccessStatusCode)
+            {
+                string containerId = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(containerId);
+                response = await client.PostAsync("http://localhost:5003/api/sandbox/start/" + containerId, new StringContent(""));
+                if (response.IsSuccessStatusCode)
+                {
+                    return View("ide");
+                }
+                else
+                {
+                    ViewBag.Json = await response.Content.ReadAsStringAsync();
+                }
+            }
+            else
+            {
+                ViewBag.Json = "403 - Forbidden";
+            }
+
+
+            return View("json");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
