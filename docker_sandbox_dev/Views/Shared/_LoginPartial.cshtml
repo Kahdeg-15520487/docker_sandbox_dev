@@ -1,0 +1,28 @@
+﻿@if (User.Identity != null && User.Identity.IsAuthenticated)
+{
+    <text>
+        <ul class="nav navbar-nav navbar-right">
+            <li class="navbar-text">
+                @{ 
+                    var email = User.Claims.FirstOrDefault(x => x.Type == "email");
+                    var emailDisplay = "";
+                    if (email == null)
+                    {
+                        emailDisplay = "email@website";
+                    }
+                    else
+                    {
+                        emailDisplay = email.Value;
+                    }
+                }
+                Hello, @emailDisplay
+            </li>
+        </ul>
+    </text>
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li>@Html.ActionLink("Sign in", "Login", "Home", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+    </ul>
+}

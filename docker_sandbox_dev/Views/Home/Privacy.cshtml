@@ -1,0 +1,36 @@
+﻿@using Microsoft.AspNetCore.Authentication
+@using System.IdentityModel.Tokens.Jwt
+@using Newtonsoft.Json
+
+<h2>Claims</h2>
+
+<dl>
+    @foreach (var claim in User.Claims)
+    {
+        <dt>@claim.Type</dt>
+        <dd>@claim.Value</dd>
+    }
+</dl>
+
+<h2>Properties</h2>
+
+<dl>
+    @foreach (var prop in (await Context.AuthenticateAsync()).Properties.Items)
+    {
+        <dt>@prop.Key</dt>
+        <dd>@prop.Value</dd>
+        <dd>
+            @{
+                if (prop.Key == ".Token.access_token")
+                {
+                    var j = new JwtSecurityToken(prop.Value);
+                    foreach (var claim in j.Claims)
+                    {
+                        Write($"{claim.Type} : {claim.Value}");
+                        WriteLiteral("<br/>");
+                    }
+                }
+            }
+        </dd>
+    }
+</dl>
