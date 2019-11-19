@@ -26,13 +26,17 @@ namespace docker_sandbox_dev_api
             services.AddControllers();
             services.AddSingleton<IConfiguration>(this.Configuration);
             services.AddTransient<IDockerService, DockerService>();
+            services.AddTransient<ISandboxService, SandboxService>();
 
             services.AddDbContext<SandboxDbContext>(options =>
             {
                 options.UseSqlServer(this.Configuration.GetConnectionString("DefaultConnection"));
             });
 
-            services.AddAuthentication("Bearer")
+            services.AddAuthentication((o) =>
+                    {
+                        o.DefaultAuthenticateScheme = "Bearer";
+                    })
                     .AddIdentityServerAuthentication(options =>
                     {
                         options.Authority = "http://localhost:5000";

@@ -10,86 +10,97 @@ using Microsoft.EntityFrameworkCore;
 using docker_sandbox_dev_api.Filters;
 using docker_sandbox_dev_api.Dal.Model;
 using docker_sandbox_dev_api.Contract;
+using docker_sandbox_dev_api.Contract.Dtos;
 
 namespace docker_sandbox_dev_api.Controllers
 {
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [Route("api/sandbox")]
     public class SandboxController : ControllerBase
     {
-        private readonly SandboxDbContext context;
+        private readonly ISandboxService sandboxService;
 
-        private readonly IDockerService dockerService;
-
-        public SandboxController(SandboxDbContext context, IDockerService dockerService)
+        public SandboxController(ISandboxService sandboxService)
         {
-            this.context = context;
-            this.dockerService = dockerService;
+            this.sandboxService = sandboxService;
         }
 
         [HttpGet]
         [Authorize]
         [UserMapper]
-        public async Task<IEnumerable<Docker.DotNet.Models.ContainerListResponse>> GetCreatedSandbox()
-        {
-            //Guid userId = (Guid)this.Request.HttpContext.Items["UserId"];
-            //User user = this.context.Users.Include(u => u.Containers).FirstOrDefault(u => u.UserId.Equals(userId));
-            //return user.Containers.Select(c => c.ContainerId.ToString());
-            return await this.dockerService.GetContainers();
-        }
-
-        [HttpPost("start/{sandboxId}")]
-        public async Task<IActionResult> StartSandbox(string sandboxId)
-        {
-            await this.dockerService.StartContainer(sandboxId);
-            return Ok();
-        }
-
-        [HttpPost]
-        //[Authorize]
-        //[UserMapper]
-        public async Task<string> CreateNewSandbox()
-        {
-            //IEnumerable<string> containers = await this.dockerService.GetContainers();
-            //return string.Join(", ", containers);
-            //Guid userId = (Guid)this.Request.HttpContext.Items["UserId"];
-            //User user = this.context.Users.Include(u => u.Containers).FirstOrDefault(u => u.UserId.Equals(userId));
-            //if (user.Containers.Count > 0)
-            //{
-            //    return user.Containers.First().DockerContainerId;
-            //}
-            //else
-            //{
-            //    string dockerContainerId = await this.dockerService.CreateContainer("");
-            //    user.Containers.Add(new Container()
-            //    {
-            //        ContainerId = Guid.NewGuid(),
-            //        DockerContainerId = dockerContainerId,
-            //        UserId = user.UserId
-            //    });
-            //    await context.SaveChangesAsync();
-            //    return dockerContainerId;
-            //}
-
-            return await this.dockerService.CreateContainer(""); 
-        }
-
-        [HttpDelete]
-        [Authorize]
-        [UserMapper]
-        public async Task<IActionResult> DeleteSandbox(string sandboxId)
+        public async Task<IActionResult> GetCreatedSandbox()
         {
             Guid userId = (Guid)this.Request.HttpContext.Items["UserId"];
-            User user = this.context.Users.Include(u => u.Containers).FirstOrDefault(u => u.UserId.Equals(userId));
-            if (user.Containers.FirstOrDefault(c => c.DockerContainerId == sandboxId) == null)
+            try
+            {
+                return Ok(await this.sandboxService.GetCreatedSandboxes(userId));
+            }
+            catch (KeyNotFoundException)
             {
                 return this.NotFound();
             }
-            else
+        }
+
+        [HttpPost("start/{sandboxId}")]
+        [Authorize]
+        [UserMapper]
+        public async Task<IActionResult> StartSandbox(Guid sandboxId)
+        {
+            Guid userId = (Guid)this.Request.HttpContext.Items["UserId"];
+
+            try
             {
-                await this.dockerService.DeleteContainer(sandboxId);
+                return Ok(await this.sandboxService.StartSandbox(userId, sandboxId));
+            }
+            catch (KeyNotFoundException)
+            {
+                return this.NotFound();
+            }
+        }
+
+        [HttpPost("stop/{sandboxId}")]
+        [Authorize]
+        [UserMapper]
+        public async Task<IActionResult> StopSandbox(Guid sandboxId)
+        {
+            Guid userId = (Guid)this.Request.HttpContext.Items["UserId"];
+
+            try
+            {
+                await this.sandboxService.StopSandbox(userId, sandboxId);
                 return Ok();
             }
+            catch (KeyNotFoundException)
+            {
+                return this.NotFound();
+            }
+        }
+
+        [HttpPost]
+        [Authorize]
+        [UserMapper]
+        public async Task<string> CreateNewSandbox()
+        {
+            Guid userId = (Guid)this.Request.HttpContext.Items["UserId"];
+            return (await this.sandboxService.CreateSandbox(userId)).ToString();
+        }
+
+        [HttpDelete("{sandboxId}")]
+        [Authorize]
+        [UserMapper]
+        public async Task<IActionResult> DeleteSandbox(Guid sandboxId)
+        {
+            Guid userId = (Guid)this.Request.HttpContext.Items["UserId"];
+            try
+            {
+                await this.sandboxService.DestroySandbox(userId, sandboxId);
+            }
+            catch (KeyNotFoundException)
+            {
+                return this.NotFound();
+            }
+            return this.Ok();
         }
     }
 }

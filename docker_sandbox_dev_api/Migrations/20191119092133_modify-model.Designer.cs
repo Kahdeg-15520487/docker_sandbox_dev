@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using docker_sandbox_dev_api.Dal;
 
 namespace docker_sandbox_dev_api.Migrations
 {
     [DbContext(typeof(SandboxDbContext))]
-    partial class SandboxDbContextModelSnapshot : ModelSnapshot
+    [Migration("20191119092133_modify-model")]
+    partial class modifymodel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

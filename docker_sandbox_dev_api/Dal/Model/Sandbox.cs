@@ -5,13 +5,16 @@ using System.Threading.Tasks;
 
 namespace docker_sandbox_dev_api.Dal.Model
 {
-    public class Container
+    public class Sandbox
     {
-        public Guid ContainerId { get; set; }
+        public Guid SandboxId { get; set; }
         public Guid UserId { get; set; }
         public User User { get; set; }
 
+        public string SandboxCreationConfig { get; set; }
+
         public string DockerContainerId { get; set; }
+        public string DockerContainerPort { get; set; }
         public string DockerContainerImage { get; set; }
     }
 }

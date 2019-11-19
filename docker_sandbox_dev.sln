@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29411.108
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "docker_sandbox_dev", "docker_sandbox_dev\docker_sandbox_dev.csproj", "{3E57410A-C44B-4286-958C-230E55B1D18C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "docker_sandbox_dev", "docker_sandbox_dev\docker_sandbox_dev.csproj", "{3E57410A-C44B-4286-958C-230E55B1D18C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "docker_sandbox_dev_api", "docker_sandbox_dev_api\docker_sandbox_dev_api.csproj", "{F5DD23C7-3297-47E6-83BF-0D125D09FCF1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "docker_sandbox_dev_api", "docker_sandbox_dev_api\docker_sandbox_dev_api.csproj", "{F5DD23C7-3297-47E6-83BF-0D125D09FCF1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

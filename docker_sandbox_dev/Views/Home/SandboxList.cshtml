@@ -1,0 +1,71 @@
+@using Microsoft.AspNetCore.Authentication;
+@using System.Net.Http;
+@using System.Net.Http.Headers;
+@using Newtonsoft.Json;
+<html>
+<head>
+    <style>
+        .box {
+            float: left;
+            height: 20px;
+            width: 20px;
+            margin-bottom: 15px;
+            border: 1px solid black;
+            clear: both;
+        }
+
+        .red {
+            background-color: red;
+        }
+
+        .green {
+            background-color: green;
+        }
+
+        .blue {
+            background-color: blue;
+        }
+    </style>
+</head>
+<body>
+    @{
+        if (User.Identity.IsAuthenticated)
+        {
+            List<Sandbox> Sandboxes = null;
+            string accessToken = await this.Context.GetTokenAsync("access_token");
+
+            HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            HttpResponseMessage response = await client.GetAsync("http://localhost:5003/api/sandbox");
+
+            if (response.IsSuccessStatusCode)
+            {
+                string sandboxesJson = response.Content.ReadAsStringAsync().Result;
+                Sandboxes = JsonConvert.DeserializeObject<List<Sandbox>>(sandboxesJson);
+            }
+            if (Sandboxes != null)
+            {
+                foreach (var sb in Sandboxes)
+                {
+                    <form method="post">
+                        <span>@sb.Id.ToString()</span>
+                        @if (sb.Status == SandboxStatus.Stopped)
+                        {
+                            <div class='box red' />
+                        }
+                        else
+                        {
+                            <div class='box green' />
+                        }
+                        <input type="hidden" name="sandboxId" id="sandboxId" value="@sb" />
+                        <button asp-controller="Sandbox" asp-action="Start">Start</button>
+                        <button asp-controller="Sandbox" asp-action="Stop">Stop</button>
+                        <button asp-controller="Sandbox" asp-action="Delete"> Delete</button>
+                    </form>
+                }
+            }
+        }
+    }
+</body>
+</html>

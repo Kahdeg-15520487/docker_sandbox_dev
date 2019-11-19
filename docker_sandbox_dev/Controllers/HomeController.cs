@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -10,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace docker_sandbox_dev.Controllers
 {
@@ -58,15 +56,14 @@ namespace docker_sandbox_dev.Controllers
         [Authorize]
         public IActionResult Privacy()
         {
-            var ttt = this.HttpContext.AuthenticateAsync().Result;
+            AuthenticateResult ttt = this.HttpContext.AuthenticateAsync().Result;
             ViewData["Message"] = "Secure page.";
 
             return View();
         }
 
-        public async Task<IActionResult> CallAPI()
+        public async Task<IActionResult> CreateSandbox()
         {
-
             string accessToken = await this.HttpContext.GetTokenAsync("access_token");
 
             HttpClient client = new HttpClient();
@@ -79,9 +76,12 @@ namespace docker_sandbox_dev.Controllers
                 string containerId = await response.Content.ReadAsStringAsync();
                 Console.WriteLine(containerId);
                 response = await client.PostAsync("http://localhost:5003/api/sandbox/start/" + containerId, new StringContent(""));
+                string responseJson = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(responseJson);
+                Sandbox sandbox = JsonConvert.DeserializeObject<Sandbox>(responseJson);
                 if (response.IsSuccessStatusCode)
                 {
-                    return View("ide");
+                    return View("ide", sandbox);
                 }
                 else
                 {

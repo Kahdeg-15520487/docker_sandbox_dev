@@ -8,6 +8,7 @@ namespace docker_sandbox_dev_api.Dal.Model
     public class User
     {
         public Guid UserId { get; set; }
-        public virtual ICollection<Container> Containers { get; set; }
+        public virtual ICollection<Sandbox> Sandboxes { get; set; }
+        public int Port { get; set; }
     }
 }

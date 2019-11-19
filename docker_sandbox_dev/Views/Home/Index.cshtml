@@ -4,4 +4,9 @@
 }
 
 <h2>lala</h2>
+@if (User.Identity.IsAuthenticated)
+{
+    @*<partial name="SandboxList.cshtml" />*@
+    @await Html.PartialAsync("SandboxList.cshtml");
+}
 

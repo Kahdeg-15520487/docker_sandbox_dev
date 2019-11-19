@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Docker.DotNet;
 using Docker.DotNet.Models;
 using docker_sandbox_dev_api.Contract;
+using docker_sandbox_dev_api.Contract.Dtos;
 
 namespace docker_sandbox_dev_api.Services
 {
@@ -27,51 +28,64 @@ namespace docker_sandbox_dev_api.Services
         public async Task<IEnumerable<ContainerListResponse>> GetContainers()
         {
             IList<ContainerListResponse> containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { Limit = int.MaxValue });
-            //return containers.Select(c => c.ID);
             return containers;
         }
 
-        public async Task<string> CreateContainer(string image)
+        public async Task<ContainerListResponse> GetContainer(string containerId)
         {
-            //Config config = new Config()
+            IList<ContainerListResponse> containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { Limit = int.MaxValue });
+            return containers.FirstOrDefault(c => c.ID.Equals(containerId));
+        }
+
+        public async Task<string> CreateContainer(SandboxCreationConfig sandboxConfig)
+        {
+            CreateContainerResponse response = await client.Containers.CreateContainerAsync(new CreateContainerParameters()
+            {
+                Image = sandboxConfig.Image,
+                Tty = true, // -it
+                HostConfig = new HostConfig
+                {
+                    PortBindings = new Dictionary<string, IList<PortBinding>>
+                    {
+                        {"8080/tcp", new List<PortBinding>
+                        {
+                            new PortBinding
+                            {
+                                HostPort = sandboxConfig.Port
+                            }
+                        }}
+                    }
+                },
+                Volumes = new Dictionary<string, EmptyStruct>()
+                {
+                    {$"{sandboxConfig.ConfigDir}:/home/coder/.local/share/code-server",default },
+                    {$"{sandboxConfig.ProjectDir}:/home/coder/project",default }
+                },
+                Env = new List<string>() { $"PASSWORD={sandboxConfig.Password}" }
+            });
+
+            return response.ID;
+
+            //ContainerCreationConfig config = new ContainerCreationConfig()
             //{
-            //    Tty = true, // -it
-            //    ExposedPorts = new Dictionary<string, EmptyStruct>() { { "127.0.0.1:8080:8080", default } }, // -p 127.0.0.1:8080:8080
-            //    Volumes = new Dictionary<string, EmptyStruct>()
-            //    {
-            //        {"C:/Users/Minh/.local/share/code-server:/home/coder/.local/share/code-server",default },
-            //        {"C:/Users/Minh:/home/coder/project",default }
-            //    },
-            //    Image = "codercom/code-server:v2",
-            //    Env = new List<string>() { "PASSWORD=123456" }
+            //    Port = "9090",
+            //    ConfigDir = "C:/Users/Minh/.local/share/code-server",
+            //    ProjectDir = "C:/Users/Minh",
+            //    Password = "123456",
+            //    Image = "codercom/code-server:v2"
             //};
 
-            //Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(config, Newtonsoft.Json.Formatting.Indented));
+            //ProcessStartInfo processStartInfo = new ProcessStartInfo("docker", " create " + config.ToString());
+            //processStartInfo.RedirectStandardOutput = true;
+            //Process p = new Process();
+            //// Redirect the output stream of the child process.
+            //p.StartInfo = processStartInfo;
+            //p.Start();
+            //string output = p.StandardOutput.ReadToEnd();
+            //Console.WriteLine(output);
+            //p.WaitForExit();
 
-            //CreateContainerResponse response = await client.Containers.CreateContainerAsync(new CreateContainerParameters(config
-            //));
-
-            //return response;
-
-            var config = new
-            {
-                Port = "9090",
-                ConfigDir = "C:/Users/Minh/.local/share/code-server",
-                ProjectDir = "C:/Users/Minh",
-                Password = "123456"
-            };
-
-            ProcessStartInfo processStartInfo = new ProcessStartInfo("docker", " create -p 9090:8080 -v \"C:/Users/Minh/.local/share/code-server:/home/coder/.local/share/code-server\" -v \"C:/Users/Minh:/home/coder/project\" -e \"PASSWORD=123456\" codercom/code-server:v2");
-            processStartInfo.RedirectStandardOutput = true;
-            Process p = new Process();
-            // Redirect the output stream of the child process.
-            p.StartInfo = processStartInfo;
-            p.Start();
-            string output = p.StandardOutput.ReadToEnd();
-            Console.WriteLine(output);
-            p.WaitForExit();
-
-            return output;
+            //return output;
         }
 
         public async Task StartContainer(string containerId)
@@ -81,7 +95,32 @@ namespace docker_sandbox_dev_api.Services
 
         public async Task DeleteContainer(string containerId)
         {
-            await client.Containers.KillContainerAsync(containerId, null);
+            await client.Containers.KillContainerAsync(containerId, new ContainerKillParameters());
+            await client.Containers.RemoveContainerAsync(containerId, new ContainerRemoveParameters());
+        }
+
+        public async Task<string> GetFreePort()
+        {
+            return "9090";
+        }
+
+        public async Task StopContainer(string containerId)
+        {
+            await client.Containers.StopContainerAsync(containerId, new ContainerStopParameters());
+        }
+
+        public async Task<SandboxStatus> GetContainerStatus(string containerId)
+        {
+            ContainerListResponse container = await this.GetContainer(containerId);
+            return container.Status switch
+            {
+                "created" => SandboxStatus.Stopped,
+                "stopped" => SandboxStatus.Stopped,
+                "paused" => SandboxStatus.Stopped,
+
+                "runing" => SandboxStatus.Started,
+                _ => SandboxStatus.Stopped
+            };
         }
     }
 }

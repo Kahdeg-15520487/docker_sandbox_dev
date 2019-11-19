@@ -15,6 +15,6 @@ namespace docker_sandbox_dev_api.Dal
         }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<Container> Containers { get; set; }
+        public DbSet<Sandbox> Sandboxes { get; set; }
     }
 }
